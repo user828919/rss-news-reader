@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { formatDate } from "@/lib/date";
 
 type Feed = {
   id: string;
@@ -170,7 +171,7 @@ export default function ManageFeedsPage() {
                 />
                 <div className="item-meta">
                   <span className="badge">
-                    Added {new Date(selectedFeed.createdAt).toLocaleDateString()}
+                    Added {formatDate(selectedFeed.createdAt)}
                   </span>
                   <button className="button secondary" type="submit" disabled={saving}>
                     {saving ? "Saving..." : "Save Changes"}
@@ -202,7 +203,7 @@ export default function ManageFeedsPage() {
                 <div className="feed-title">{feed.title}</div>
                 <div className="feed-url">{feed.url}</div>
                 <div className="item-meta">
-                  <span className="badge">{new Date(feed.createdAt).toLocaleDateString()}</span>
+                  <span className="badge">{formatDate(feed.createdAt)}</span>
                   <button
                     className="button danger"
                     type="button"

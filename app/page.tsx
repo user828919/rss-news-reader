@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { formatDate } from "@/lib/date";
 
 type Feed = {
   id: string;
@@ -18,19 +19,14 @@ type FeedItem = {
   feedTitle?: string;
 };
 
-const formatDate = (value?: string) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
-};
-
 export default function HomePage() {
   const [feeds, setFeeds] = useState<Feed[]>([]);
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [loadingFeeds, setLoadingFeeds] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
+  const selectedFeed = feeds.find((feed) => feed.id === selectedFeedId) ?? null;
 
   const loadFeeds = async () => {
     setLoadingFeeds(true);
@@ -47,11 +43,13 @@ export default function HomePage() {
     }
   };
 
-  const loadItems = async () => {
+  const loadItems = async (feedId?: string | null) => {
     setLoadingItems(true);
     setError(null);
     try {
-      const response = await fetch("/api/items?all=true");
+      const feedQuery = feedId ?? selectedFeedId;
+      const url = feedQuery ? `/api/items?feedId=${feedQuery}` : "/api/items?all=true";
+      const response = await fetch(url);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Failed to load items");
       setItems(data.items ?? []);
@@ -64,8 +62,12 @@ export default function HomePage() {
 
   useEffect(() => {
     loadFeeds();
-    loadItems();
+    loadItems(null);
   }, []);
+
+  useEffect(() => {
+    loadItems(selectedFeedId);
+  }, [selectedFeedId]);
 
   return (
     <div className="container">
@@ -92,12 +94,13 @@ export default function HomePage() {
               {feeds.map((feed) => (
                 <div
                   key={feed.id}
-                  className="feed-card"
+                  className={`feed-card ${feed.id === selectedFeedId ? "active" : ""}`}
+                  onClick={() => setSelectedFeedId(feed.id)}
                 >
                   <div className="feed-title">{feed.title}</div>
                   <div className="feed-url">{feed.url}</div>
                   <div className="item-meta">
-                    <span className="badge">{new Date(feed.createdAt).toLocaleDateString()}</span>
+                    <span className="badge">{formatDate(feed.createdAt)}</span>
                   </div>
                 </div>
               ))}
@@ -107,7 +110,7 @@ export default function HomePage() {
             </div>
             <button
               className="button secondary"
-              onClick={loadFeeds}
+              onClick={() => loadFeeds()}
               disabled={loadingFeeds}
               style={{ marginTop: 16 }}
             >
@@ -120,10 +123,19 @@ export default function HomePage() {
           <h2 className="section-title">Latest Items</h2>
           <div>
             <div className="item-meta" style={{ marginBottom: 18 }}>
-              <span className="badge">All Feeds</span>
+              <button
+                className="badge badge-action"
+                type="button"
+                onClick={() => setSelectedFeedId(null)}
+              >
+                All Feeds
+              </button>
+              <span className="badge">
+                {selectedFeed ? `Showing: ${selectedFeed.title}` : "Showing: All"}
+              </span>
               <button
                 className="button secondary"
-                onClick={loadItems}
+                onClick={() => loadItems(selectedFeedId)}
                 disabled={loadingItems}
               >
                 {loadingItems ? "Loading..." : "Refresh Items"}
