@@ -1,5 +1,7 @@
 node_modules
 .next
+data/feeds.json
+.next
 .env
 .env.local
 .DS_Store
