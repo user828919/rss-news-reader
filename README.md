@@ -1,4 +1,4 @@
-# RSS News Reader
+# RSS News Reader by Codex
 
 A Next.js RSS reader that lets you save feeds and read the latest items.
 
